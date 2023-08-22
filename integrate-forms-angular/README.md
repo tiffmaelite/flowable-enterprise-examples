@@ -11,7 +11,7 @@ For further explanation please refer to the How-To.
 
 ## Setup
 
-To run the project, you need to start Flowable Work on port 8080 (or change the [proxy.conf.json](./src/proxy.conf.json)) and run the following commands:
+To run the project, you need to start Flowable Work on port 8090 (or change the [proxy.conf.json](./src/proxy.conf.json)) and run the following commands:
 
 ```bash
 npm install
