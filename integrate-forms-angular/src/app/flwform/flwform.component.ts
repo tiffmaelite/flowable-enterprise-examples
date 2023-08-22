@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Ou
 import {destroy, Model, render} from '@flowable/forms';
 
 @Component({
-  selector: 'flwform',
+  selector: 'app-flw-form',
   template: '<div #el></div>'
 })
 export class FlwformComponent implements AfterViewInit, OnDestroy {
