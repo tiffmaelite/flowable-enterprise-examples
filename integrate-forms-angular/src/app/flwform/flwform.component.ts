@@ -26,6 +26,6 @@ export class FlwformComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    destroy(this.el.nativeElement);
+    destroy();
   }
 }
