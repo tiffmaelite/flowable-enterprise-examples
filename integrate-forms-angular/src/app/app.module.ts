@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
 import { FlwformComponent } from './flwform/flwform.component';
-import { HttpClientModule } from '@angular/common/http';
+import { FlowableApiService } from './flwapi/FlowableApiService';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,9 @@ import { HttpClientModule } from '@angular/common/http';
     BrowserModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    FlowableApiService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,8 +1,10 @@
 import {Component, OnInit} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
 import {mergeMap, map} from 'rxjs/operators';
+import {combineLatest, Observable} from 'rxjs';
+
 import {Model} from '@flowable/forms';
-import {combineLatest} from 'rxjs';
+
+import {FlowableApiService} from './flwapi/FlowableApiService';
 
 @Component({
   selector: 'app-root',
@@ -14,46 +16,45 @@ export class AppComponent implements OnInit {
   public props: Model.CommonFormProps = null;
 
   constructor(
-    private httpClient: HttpClient
-  ) {
+    private flowableApiService: FlowableApiService) {
   }
 
   ngOnInit(): void {
-    const options = {
-      headers: {
-        Authorization: 'Basic YWRtaW46dGVzdA=='
-      }
-    };
-    const processDefinitionIdObservable = this.httpClient.get<any>('/process-api/repository/process-definitions?key=integrateForms&latest=true', options)
-      .pipe<any>(
-        map(result => result.data[0].id)
+    this.fetchProcessStartForm('integrateForms')
+      .subscribe(([formLayout, processDefinitionId]) => {
+        this.setFormPropertiesForStartForm(formLayout, processDefinitionId);
+      });
+  }
+
+  private fetchProcessStartForm(processDefinitionKey: string): Observable<[Model.FormLayout, string]> {
+    const processDefinitionIdObservable = this.flowableApiService.fetchLatestProcessDefinition(processDefinitionKey)
+      .pipe<string>(
+        map(result => result?.id)
       );
 
-    combineLatest([
+    return combineLatest([
       processDefinitionIdObservable.pipe<Model.FormLayout>(
-        mergeMap(processDefinitionId => this.httpClient.get<Model.FormLayout>(`/platform-api/process-definitions/${processDefinitionId}/start-form`, options))
+        mergeMap(processDefinitionId => this.flowableApiService.fetchStartForm(processDefinitionId))
       ),
       processDefinitionIdObservable
-    ])
-      .subscribe(([formLayout, processDefinitionId]) => {
-        formLayout.outcomes = formLayout.outcomes || [{
-          label: 'Create new process',
-          value: '__CREATE'
-        }];
-        this.props = {
-          config: formLayout,
-          onOutcomePressed: (payload: Model.Payload, result: any, navigationUrl?: string, outcomeConfig?: Model.ResolvedColumn) => {
-            this.httpClient.post(`/platform-api/process-instances`, {
-              ...payload,
-              outcome: result,
-              processDefinitionId
-            }, options)
-              .subscribe(creationResult => {
-                // handle successful creation
-              });
-          }
-        };
-      });
+    ]);
+  }
+
+  private setFormPropertiesForStartForm(formLayout: Model.FormLayout, processDefinitionId: string): void {
+    formLayout.outcomes = formLayout.outcomes || [
+      this.flowableApiService.getDefaultProcessCreateOutcome()
+    ];
+    this.props = {
+      config: formLayout ,
+      onOutcomePressed: (payload: Model.Payload, result: any, navigationUrl?: string, outcomeConfig?: Model.ResolvedColumn) => {
+        console.log(processDefinitionId, result, navigationUrl, outcomeConfig, payload);
+        this.flowableApiService.postNewProcessInstance(processDefinitionId, payload, result)
+          .subscribe(creationResult => {
+            console.log(processDefinitionId, creationResult);
+            // handle successful creation and store creationResult.id to have the id of the created process
+          });
+      }
+    };
   }
 
 }
